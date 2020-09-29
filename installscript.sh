@@ -55,6 +55,15 @@ if [ "$1" = "uninstall" ]; then
     sudo rm /etc/systemd/system/power_request.service >/dev/null
     echo "Request service deleted."
   fi
+  systemctl status power_check >/dev/null
+  IS_POWER_REQUEST_EXIST=$?
+  if [ "$IS_POWER_CHECK_EXIST" = "0" ]; then
+    sudo systemctl stop power_check >/dev/null
+    sudo systemctl disable power_check >/dev/null
+    sudo rm /etc/systemd/system/power_check.service >/dev/null
+    echo "Button Check service deleted."
+  fi
+
 
   echo "Done!"
   exit 1
@@ -319,7 +328,7 @@ install_distribution() {
 
   if [ ! -d "/opt/sixfab/pms/api" ]; then
     echo "Downloading HAT request service..."
-    sudo git clone https://github.com/sixfab/power_distribution-service.git /opt/sixfab/pms/api >/dev/null
+    sudo git clone https://github.com/edro-sparc/power_distribution-service.git /opt/sixfab/pms/api >/dev/null
     cd /opt/sixfab/pms/api
     pip3 uninstall -y sixfab-power-python-api >/dev/null && sudo pip3 uninstall -y sixfab-power-python-api >/dev/null
     sudo pip3 install -r requirements.txt >/dev/null
@@ -395,6 +404,41 @@ WantedBy=multi-user.target" | sudo tee /etc/systemd/system/power_agent.service
     echo "Agent already installed, restarting..."
     sudo systemctl restart power_agent
   fi
+
+  if [ ! -f "/etc/systemd/system/power_check.service" ]; then
+
+    echo "Initializing systemd service for agent..."
+
+    echo "[Unit]
+Description=EDRO Check sixfab button status
+After=network.target network-online.target
+Requires=network-online.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u softHardShutdown.py
+WorkingDirectory=/opt/sixfab/pms/agent
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+RestartSec=3
+User=pi
+
+[Install]
+WantedBy=multi-user.target" | sudo tee /etc/systemd/system/power_check.service
+
+    echo "Enabling and starting service."
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable power_check
+    sudo systemctl start power_check
+
+    echo "Service initialized successfully."
+
+  else
+    echo "Agent already installed, restarting..."
+    sudo systemctl restart power_check
+  fi
+
 }
 
 main() {
