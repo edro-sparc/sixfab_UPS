@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # To install new device:
-# curl https://install.power.sixfab.com | sh -s TOKEN_HERE
+# curl https://raw.githubusercontent.com/edro-sparc/sixfab_UPS/master/installscript.sh | sh -s TOKEN_HERE
 # To fleet deployment mode:
-# curl https://install.power.sixfab.com | sudo sh -s -- --fleet FLEET_TOKEN_HERE
+# curl https://raw.githubusercontent.com/edro-sparc/sixfab_UPS/master/installscript.sh | sudo sh -s -- --fleet FLEET_TOKEN_HERE
 # To uninstall power software:
-# curl https://install.power.sixfab.com | sh -s uninstall
+# curl https://raw.githubusercontent.com/edro-sparc/sixfab_UPS/master/installscript.sh | sh -s uninstall
 
 cat <<"EOF"
  _____ _       __      _      ______                      
