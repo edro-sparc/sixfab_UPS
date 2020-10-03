@@ -89,8 +89,11 @@ else
 fi
 
 INTERVAL="10"
+# AGENT_REPOSITORY="https://github.com/edro-sparc/sixfab_agent.git"
+# API_REPOSITORY="https://github.com/edro-sparc/sixfab_api.git"
 AGENT_REPOSITORY="https://github.com/edro-sparc/sixfab_agent.git"
 API_REPOSITORY="https://github.com/edro-sparc/sixfab_api.git"
+
 
 check_distro() {
   OS_DETAILS=$(cat /etc/os-release)
@@ -407,7 +410,7 @@ WantedBy=multi-user.target" | sudo tee /etc/systemd/system/power_agent.service
 
   if [ ! -f "/etc/systemd/system/power_check.service" ]; then
 
-    echo "Initializing systemd service for agent..."
+    echo "Initializing systemd service for checking power button status..."
 
     echo "[Unit]
 Description=EDRO Check sixfab button status
@@ -435,7 +438,7 @@ WantedBy=multi-user.target" | sudo tee /etc/systemd/system/power_check.service
     echo "Service initialized successfully."
 
   else
-    echo "Agent already installed, restarting..."
+    echo "Power button check already installed, restarting..."
     sudo systemctl restart power_check
   fi
 
