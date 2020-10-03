@@ -55,6 +55,7 @@ if [ "$1" = "uninstall" ]; then
     sudo rm /etc/systemd/system/power_request.service >/dev/null
     echo "Request service deleted."
   fi
+  loadsls
   systemctl status power_check >/dev/null
   IS_POWER_REQUEST_EXIST=$?
   if [ "$IS_POWER_CHECK_EXIST" = "0" ]; then
@@ -62,7 +63,10 @@ if [ "$1" = "uninstall" ]; then
     sudo systemctl disable power_check >/dev/null
     sudo rm /etc/systemd/system/power_check.service >/dev/null
     echo "Button Check service deleted."
+  else  
+    echo "Button Check service not present."
   fi
+
 
 
   echo "Done!"
