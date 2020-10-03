@@ -57,7 +57,7 @@ if [ "$1" = "uninstall" ]; then
   fi
   loadsls
   systemctl status power_check >/dev/null
-  IS_POWER_REQUEST_EXIST=$?
+  IS_POWER_CHECK_EXIST=$?
   if [ "$IS_POWER_CHECK_EXIST" = "0" ]; then
     sudo systemctl stop power_check >/dev/null
     sudo systemctl disable power_check >/dev/null
