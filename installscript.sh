@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # To install new device:
-# curl https://raw.githubusercontent.com/edro-sparc/sixfab_UPS/master/installscript.sh | sh -s TOKEN_HERE
+# curl https://raw.githubusercontent.com/edro-sparc/sixfab_UPS/dev/installscript.sh | sh -s TOKEN_HERE
 # To fleet deployment mode:
-# curl https://raw.githubusercontent.com/edro-sparc/sixfab_UPS/master/installscript.sh | sudo sh -s -- --fleet FLEET_TOKEN_HERE
+# curl https://raw.githubusercontent.com/edro-sparc/sixfab_UPS/dev/installscript.sh | sudo sh -s -- --fleet FLEET_TOKEN_HERE
 # To uninstall power software:
-# curl https://raw.githubusercontent.com/edro-sparc/sixfab_UPS/master/installscript.sh | sh -s uninstall
+# curl https://raw.githubusercontent.com/edro-sparc/sixfab_UPS/dev/installscript.sh | sh -s uninstall
 
 cat <<"EOF"
  _____ _       __      _      ______                      
@@ -55,7 +55,7 @@ if [ "$1" = "uninstall" ]; then
     sudo rm /etc/systemd/system/power_request.service >/dev/null
     echo "Request service deleted."
   fi
-  loadsls
+
   systemctl status power_check >/dev/null
   IS_POWER_CHECK_EXIST=$?
   if [ "$IS_POWER_CHECK_EXIST" = "0" ]; then
@@ -66,8 +66,6 @@ if [ "$1" = "uninstall" ]; then
   else  
     echo "Button Check service not present."
   fi
-
-
 
   echo "Done!"
   exit 1
@@ -93,11 +91,8 @@ else
 fi
 
 INTERVAL="10"
-# AGENT_REPOSITORY="https://github.com/edro-sparc/sixfab_agent.git"
-# API_REPOSITORY="https://github.com/edro-sparc/sixfab_api.git"
-AGENT_REPOSITORY="https://github.com/edro-sparc/sixfab_agent.git"
-API_REPOSITORY="https://github.com/edro-sparc/sixfab_api.git"
-
+AGENT_REPOSITORY="https://git.sixfab.com/sixfab-power/agent.git"
+API_REPOSITORY="https://git.sixfab.com/sixfab-power/api.git"
 
 check_distro() {
   OS_DETAILS=$(cat /etc/os-release)
@@ -137,6 +132,7 @@ create_basefile() {
   echo "Creating Sixfab root directory on /opt..."
   if [ ! -d "/opt/sixfab" ]; then
     sudo mkdir -p /opt/sixfab
+    sudo mkdir -p /opt/edro
     echo "Root directory created."
   else
     echo "Directory already exists."
@@ -335,7 +331,7 @@ install_distribution() {
 
   if [ ! -d "/opt/sixfab/pms/api" ]; then
     echo "Downloading HAT request service..."
-    sudo git clone https://github.com/edro-sparc/power_distribution-service.git /opt/sixfab/pms/api >/dev/null
+    sudo git clone https://github.com/sixfab/power_distribution-service.git /opt/sixfab/pms/api >/dev/null
     cd /opt/sixfab/pms/api
     pip3 uninstall -y sixfab-power-python-api >/dev/null && sudo pip3 uninstall -y sixfab-power-python-api >/dev/null
     sudo pip3 install -r requirements.txt >/dev/null
@@ -345,6 +341,31 @@ install_distribution() {
     cd /opt/sixfab/pms/api && sudo git reset --hard HEAD >/dev/null
     cd /opt/sixfab/pms/api && sudo git pull >/dev/null
     sudo pip3 install -r /opt/sixfab/pms/api/requirements.txt >/dev/null
+    echo "Service updated."
+  fi
+}
+
+install_powerCheck(){
+  if [ -d "/opt/edro" ]; then
+    case $(cd /opt/edro && sudo git show origin) in
+    *edro*)
+      sudo rm -r /opt/edro/powerCheck
+      ;;
+    esac
+  fi
+
+  if [ ! -d "/opt/edro/powerCheck" ]; then
+    echo "Downloading Power check service..."
+    sudo git clone https://github.com/edro-sparc/powerCheck.git /opt/edro/powerCheck >/dev/null
+    cd /opt/edro/powerCheck
+    # pip3 uninstall -y sixfab-power-python-api >/dev/null && sudo pip3 uninstall -y sixfab-power-python-api >/dev/null
+    # sudo pip3 install -r requirements.txt >/dev/null
+    echo "Service downloaded."
+  else
+    echo "Updating HAT request service..."
+    cd /opt/edro/powerCheck && sudo git reset --hard HEAD >/dev/null
+    cd /opt/edro/powerCheck && sudo git pull >/dev/null
+    # sudo pip3 install -r /opt/sixfab/pms/api/requirements.txt >/dev/null
     echo "Service updated."
   fi
 }
@@ -412,18 +433,19 @@ WantedBy=multi-user.target" | sudo tee /etc/systemd/system/power_agent.service
     sudo systemctl restart power_agent
   fi
 
-  if [ ! -f "/etc/systemd/system/power_check.service" ]; then
+}
 
-    echo "Initializing systemd service for checking power button status..."
+initialize_powerCheck_service() {
+	  if [ ! -f "/etc/systemd/system/power_check.service" ]; then
+
+    echo "Initializing systemd service for power button check..."
 
     echo "[Unit]
-Description=EDRO Check sixfab button status
-After=network.target network-online.target
-Requires=network-online.target
+Description=Edwin Robotics Power Button Check
 
 [Service]
 ExecStart=/usr/bin/python3 -u softHardShutdown.py
-WorkingDirectory=/opt/sixfab/pms/agent
+WorkingDirectory=/opt/edro/powerCheck
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
@@ -442,10 +464,9 @@ WantedBy=multi-user.target" | sudo tee /etc/systemd/system/power_check.service
     echo "Service initialized successfully."
 
   else
-    echo "Power button check already installed, restarting..."
+    echo "Agent already installed, restarting..."
     sudo systemctl restart power_check
   fi
-
 }
 
 main() {
@@ -462,7 +483,9 @@ main() {
 
   install_agent
   install_distribution
+  install_powerCheck
   initialize_services
+  initialize_powerCheck_service
 }
 
 main
