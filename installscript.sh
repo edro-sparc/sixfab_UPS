@@ -464,7 +464,7 @@ WantedBy=multi-user.target" | sudo tee /etc/systemd/system/power_check.service
     echo "Service initialized successfully."
 
   else
-    echo "Agent already installed, restarting..."
+    echo "Power Button Check already installed, restarting..."
     sudo systemctl restart power_check
   fi
 }
