@@ -346,7 +346,7 @@ install_distribution() {
 }
 
 install_powerCheck(){
-  if [ -d "/opt/edro" ]; then
+  if [ -d "/opt/edro/powerCheck" ]; then
     case $(cd /opt/edro && sudo git show origin) in
     *edro*)
       sudo rm -r /opt/edro/powerCheck
