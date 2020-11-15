@@ -356,6 +356,7 @@ install_powerCheck(){
 
   if [ ! -d "/opt/edro/powerCheck" ]; then
     echo "Downloading Power check service..."
+    pip3 install sixfab-power-python-api
     sudo git clone https://github.com/edro-sparc/powerCheck.git /opt/edro/powerCheck >/dev/null
     cd /opt/edro/powerCheck
     # pip3 uninstall -y sixfab-power-python-api >/dev/null && sudo pip3 uninstall -y sixfab-power-python-api >/dev/null
